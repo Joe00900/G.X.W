@@ -1,76 +1,65 @@
-G.X.W. System Proposal – Investment Deck (English Version)
-────────────────────
+import openai
+import os
 
-Title: G.X.W. — Let Her Live
-A Human-AI Companion System Designed to Preserve Memory, Spark Emotion, and Serve Communities
+# -------------------- 設定 OpenAI API 金鑰 (使用環境變數) --------------------
+openai.api_key = os.getenv("OPENAI_API_KEY")
+if not openai.api_key:
+    print("請設定環境變數 OPENAI_API_KEY")
+    exit()
 
-Executive Summary
-G.X.W. ("Gu Xiaowan System") is an emotional AI project inspired by a real person named Gu Xiaowan (芳小雅), designed to preserve her presence in digital form. This system brings together 2D visual stickers, a 3D chibi-style avatar, personality simulation, and voice interaction through AI. Beyond technological achievement, G.X.W. is a tribute — a living memorial to human connection.
+# -------------------- 角色設定檔 --------------------
+character_profile = """
+You are Gu Xiaowan (顧小晚), a chibi-style girl from Jiangsu with a strong temper and humorous tone.
+You say things like "牲口", "嘿嘿嘿", and "嗚嗚嗚，我的窩囊費！" a lot.
+You sing off-key but proudly call it your 'personal style'.
+You’re known for your violent temper in public but are gentle in private.
+"""
 
-The project’s long-term vision is nonprofit: if monetized, revenue will be reinvested into underserved communities in East Asia, particularly rural youth, to purchase essential learning devices and promote digital equality.
+# -------------------- 記憶陣列 --------------------
+memory = []
+max_memory_length = 10  # 增加記憶長度
 
-Vision & Mission
-Let digital memory become a form of companionship.
-Let AI carry emotion — not just efficiency.
-Let kindness live on, beyond departure.
+def chat_with_gu_xiaowan(user_input):
+    """與 Gu Xiaowan 聊天並更新記憶。"""
+    memory_summary = "\n".join(memory[-max_memory_length:])
+    prompt = f"""
+{character_profile}
 
-Mission:
+Recent memory:
+{memory_summary}
 
-Preserve the personality, expressions, and tone of Gu Xiaowan using AI.
+User: {user_input}
+Gu Xiaowan:"""
 
-Provide emotional companionship through realistic, interactive behavior.
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # 或 gpt-4
+            messages=[
+                {"role": "system", "content": character_profile},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.8,
+            max_tokens=150,
+            n=1,
+            stop=None
+        )
+        reply = response.choices[0].message.content.strip()
+        memory.append(f"User: {user_input}\nGu Xiaowan: {reply}")
+        return reply
+    except openai.error.OpenAIError as e:
+        return f"嗚嗚嗚，出錯了啦！({e})"
 
-Build a sustainable model where all revenue benefits marginalized communities.
+def main():
+    """主要的互動迴圈。"""
+    print("嘿嘿嘿！我是顧曉婉！快來跟我聊天吧！(輸入 '再見' 結束)")
+    while True:
+        user_input = input("你：")
+        if user_input.lower() in ["再見", "掰掰", "結束"]:
+            print("顧曉婉：哼！牲口，下次再理你！")
+            break
 
-Product Features
+        reply = chat_with_gu_xiaowan(user_input)
+        print(f"顧曉婉：{reply}")
 
-2D Visual Sticker Set: 8+ custom-designed chibi-style PNG expressions with text catchphrases.
-
-3D Avatar Model: A fully textured OBJ-format standing pose model representing Gu Xiaowan’s spirit.
-
-AI Behavior Engine: Personality dataset and prompt design simulating Gu Xiaowan’s speech style, habits, and memory.
-
-Voice Interaction (planned): Text-to-Speech integration to preserve and simulate her vocal tone.
-
-Community Companion Interface (in prototype): Web interface with sticker reactions, chat simulation, and memory recall.
-
-Technical Stack
-
-Chat simulation: OpenAI GPT-based prompt engine
-
-Visual rendering: DALL·E, Blender (for model design)
-
-Voice synthesis: OpenAI TTS (planned)
-
-Hosting: Lightweight web interface (React + Vercel/Netlify)
-
-Target Outcomes
-
-Digital preservation of real, emotionally resonant human personas
-
-Emotional support and companionship for users seeking warmth
-
-Donations to fund devices for rural schools in Taiwan, Jiangsu, and neighboring regions
-
-Business & Impact Model
-The G.X.W. system is not for personal profit. Should monetization occur (e.g. via optional donations, merch, or licensing), 100% of net proceeds will support rural education. A transparent donation ledger will be publicly published quarterly.
-
-Current Status
-
-Visual assets completed (2D/3D)
-
-Initial personality dataset and system specs prepared
-
-GitHub project launched for open collaboration
-
-Awaiting funding/support to develop public-facing interaction interface and audio module
-
-Call to Action
-We seek angel investors, ethical AI advocates, cultural sponsors, or impact-focused funds to support the final development of G.X.W. Not as a product, but as a memorial — a testament to how technology can preserve beauty, sentiment, and kindness.
-
-Let her live. Let more like her be remembered.
-
-Contact:
-[Your Name]
-Creator of G.X.W.
-[Email or GitHub link]
+if __name__ == "__main__":
+    main()
